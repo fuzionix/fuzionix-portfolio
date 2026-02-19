@@ -19,7 +19,7 @@ function Navigation() {
       className="fixed inset-x-0 top-0 z-50 h-14 flex items-center justify-between px-8 md:px-12 border-b border-border bg-paper/90 backdrop-blur-sm"
     >
       {/* ── Brandmark ── */}
-      <span className="font-bold text-sm tracking-tight text-ink select-none">
+      <span className="-mb-1 font-bold text-sm tracking-tight text-ink select-none">
         <Image
           src="/logo/Fuzionix-logo.svg"
           alt="Fuzionix Logo"
@@ -111,9 +111,9 @@ function ManifestoCell() {
         <br />
         intersection
         <br />
-        <span className="text-ash">of design</span>
+        <span className="text-ash">of &#60;code&#62;</span>
         <br />
-        and code.
+        and design.
       </h1>
 
       {/* Sub-copy */}
