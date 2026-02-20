@@ -1,9 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, createContext, useContext } from "react";
 import Image from "next/image";
 import { motion, useMotionValue, useSpring } from "framer-motion";
-import { ArrowUpRight, Menu } from "lucide-react";
+import { 
+  ArrowUpRight,
+  Menu,
+  Code,
+  CircleSlash2,
+  Pyramid,
+  Origami
+} from "lucide-react";
+
+const CursorContext = createContext({
+  isHovering: false,
+  setIsHovering: (value: boolean) => {},
+});
 
 const NAV_LINKS = ["Work", "Tools", "Writing", "About", "Contact"] as const;
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -11,6 +23,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 function CursorFollower() {
   const mx = useMotionValue(-100);
   const my = useMotionValue(-100);
+  const { isHovering } = useContext(CursorContext);
 
   const dotX = useSpring(mx, { stiffness: 700, damping: 45 });
   const dotY = useSpring(my, { stiffness: 700, damping: 45 });
@@ -31,11 +44,23 @@ function CursorFollower() {
       {/* Lagging ring */}
       <motion.div
         style={{ x: ringX, y: ringY, translateX: "-50%", translateY: "-50%" }}
-        className="absolute w-36 h-36 rounded-full border border-ash/30"
+        animate={{
+          scale: isHovering ? 0.75 : 1,
+          backgroundColor: isHovering ? "rgba(26, 26, 26, 0.06)" : "rgba(0,0,0,0)",
+          borderColor: isHovering ? "rgba(26, 26, 26, 0.15)" : "rgba(136, 136, 136, 0.3)",
+        }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="absolute w-36 h-36 rounded-full border box-border"
       />
+
       {/* Fast dot */}
       <motion.div
         style={{ x: dotX, y: dotY, translateX: "-50%", translateY: "-50%" }}
+        animate={{
+          opacity: isHovering ? 0 : 1,
+          scale: isHovering ? 0 : 1,
+        }}
+        transition={{ duration: 0.2 }}
         className="absolute w-1.5 h-1.5 rounded-full border border-paper box-content bg-ink/70"
       />
     </div>
@@ -115,12 +140,61 @@ function Cell({
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.9, delay, ease: EASE }}
       className={`border-r border-b border-border flex flex-col justify-between hover:bg-white/30 transition-colors duration-500 ${className}`}
     >
       {children}
     </motion.div>
+  );
+}
+
+function WorkCell({
+  title,
+  link,
+  description,
+  delay = 0,
+  Icon,
+}: {
+  title: string;
+  link: string;
+  description: string;
+  delay?: number;
+  Icon: React.FC;
+}) {
+  const { setIsHovering } = useContext(CursorContext);
+
+  return (
+    <motion.a
+      href={link}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.9, delay, ease: EASE }}
+      className="col-span-12 md:col-span-6 p-8 md:p-12 border-r border-b border-border flex flex-col justify-between hover:bg-white/60 transition-colors duration-500 group md:cursor-none min-h-80"
+    >
+      <div className="flex justify-between items-start mb-12">
+        <div className="p-3 border border-border rounded-sm bg-paper group-hover:bg-white transition-colors duration-500">
+          <Icon />
+        </div>
+        <ArrowUpRight
+          size={18}
+          className="text-ash group-hover:text-ink transition-all duration-500 transform group-hover:translate-x-1 group-hover:-translate-y-1"
+          strokeWidth={1.5}
+        />
+      </div>
+      <div>
+        <h3 className="text-3xl md:text-4xl font-bold text-ink mb-2 tracking-tight">
+          {title}
+        </h3>
+        <p className="font-sans text-sm text-ash leading-relaxed">
+          {description}
+        </p>
+      </div>
+    </motion.a>
   );
 }
 
@@ -162,15 +236,12 @@ const META_ITEMS = [
 
 function IdentityCell() {
   return (
-    <Cell
-      delay={0.28}
-      className="col-span-12 md:col-span-5 p-8 md:p-12 gap-8"
-    >
-      <div className="flex items-start justify-between">
+    <Cell delay={0.28} className="col-span-12 md:col-span-5 p-8 md:p-12 gap-8">
+      <div className="flex items-center justify-between">
         <span className="font-sans text-xs tracking-widest uppercase text-ash">
           Identity
         </span>
-        <ArrowUpRight size={14} className="text-ash" strokeWidth={1.5} />
+        <ArrowUpRight size={18} className="text-ash" strokeWidth={1.5} />
       </div>
 
       <div>
@@ -213,10 +284,7 @@ function IdentityCell() {
 
 function PracticeCell() {
   return (
-    <Cell
-      delay={0.38}
-      className="col-span-12 md:col-span-4 p-8 md:p-12 gap-6"
-    >
+    <Cell delay={0.38} className="col-span-12 md:col-span-4 p-8 md:p-12 gap-6">
       <span className="font-sans text-xs tracking-widest uppercase text-ash">
         Practice
       </span>
@@ -247,10 +315,7 @@ function LocationCell() {
   }, []);
 
   return (
-    <Cell
-      delay={0.46}
-      className="col-span-6 md:col-span-4 p-8 md:p-12 gap-6"
-    >
+    <Cell delay={0.46} className="col-span-6 md:col-span-4 p-8 md:p-12 gap-6">
       <div className="flex items-center gap-1.5 text-ash">
         <span className="font-sans text-xs tracking-widest uppercase">
           Location
@@ -259,7 +324,7 @@ function LocationCell() {
 
       <div>
         <p className="font-bold text-sm text-ink">Hong Kong</p>
-        <p className="font-sans text-xs text-ash mt-0.5">UTC +08:00</p>
+        <p className="font-sans text-xs text-ash mt-0.5">UTC +08:00 - {time}</p>
       </div>
     </Cell>
   );
@@ -267,10 +332,7 @@ function LocationCell() {
 
 function AvailabilityCell() {
   return (
-    <Cell
-      delay={0.52}
-      className="col-span-6 md:col-span-4 p-8 md:p-12 gap-6"
-    >
+    <Cell delay={0.52} className="col-span-6 md:col-span-4 p-8 md:p-12 gap-6">
       <span className="font-sans text-xs tracking-widest uppercase text-ash">
         Availability
       </span>
@@ -288,26 +350,99 @@ function AvailabilityCell() {
   );
 }
 
+const DevToolIcon = () => (
+  <Code strokeWidth={1} />
+);
+
+const CurzrIcon = () => (
+  <Pyramid strokeWidth={1} />
+);
+
+const PseudoIpsumIcon = () => (
+  <Origami strokeWidth={1} />
+);
+
+const AudioPlusIcon = () => (
+  <CircleSlash2 strokeWidth={1} />
+);
+
 export default function Portfolio() {
+  const [isHovering, setIsHovering] = useState(false);
+
   return (
-    <div className="min-h-screen w-full bg-paper text-ink selection:bg-ink selection:text-paper md:[cursor:none]">
-      <CursorFollower />
-      <Navigation />
+    <CursorContext.Provider value={{ isHovering, setIsHovering }}>
+      <div className="min-h-screen w-full bg-paper text-ink selection:bg-ink selection:text-paper md:cursor-none">
+        <CursorFollower />
+        <Navigation />
 
-      {/* Profile / Manifesto */}
-      <section
-        id="home"
-        className="min-h-screen pt-14 grid grid-cols-12 border-l border-t border-border"
-      >
-        {/* Row 1 */}
-        <ManifestoCell />
-        <IdentityCell />
+        <main className="pt-14">
+          {/* Profile / Manifesto Section */}
+          <section
+            id="home"
+            className="grid grid-cols-12 border-l border-t border-border"
+          >
+            {/* Row 1 */}
+            <ManifestoCell />
+            <IdentityCell />
 
-        {/* Row 2 */}
-        <PracticeCell />
-        <LocationCell />
-        <AvailabilityCell />
-      </section>
-    </div>
+            {/* Row 2 */}
+            <PracticeCell />
+            <LocationCell />
+            <AvailabilityCell />
+          </section>
+
+          {/* Selected Works Section */}
+          <section
+            id="work"
+            className="grid grid-cols-12 border-l border-border"
+          >
+            {/* Section Header Cell */}
+            <Cell delay={0.1} className="col-span-12 p-8 md:p-12 flex flex-col md:flex-row md:items-end justify-between gap-4 bg-paper">
+              <div>
+                <span className="font-sans text-xs tracking-widest uppercase text-ash block mb-4">
+                  Index
+                </span>
+                <h2 className="text-4xl md:text-5xl font-bold text-ink tracking-tight">
+                  Selected Works
+                </h2>
+              </div>
+              <span className="font-sans text-xs tracking-widest uppercase text-ash">
+                01 — 04
+              </span>
+            </Cell>
+
+            {/* Work Grid */}
+            <WorkCell
+              title="DevTool Plus"
+              link="#"
+              description="A code editor extension that provides common developer tools directly in your editor. The extension runs entirely on your local machine. No network requests are involved."
+              delay={0.2}
+              Icon={DevToolIcon}
+            />
+            <WorkCell
+              title="Curzr"
+              link="#"
+              description="A library of high-quality custom cursors and effects. It showcases creative designs with live demos. Developers can access easy-to-use code examples for every cursor."
+              delay={0.3}
+              Icon={CurzrIcon}
+            />
+            <WorkCell
+              title="Pseudo Ipsum"
+              link="#"
+              description="This tool provides Lorem Ipsum for code. It generates syntactically valid and non-functional syntax. Support is included for various popular programming languages."
+              delay={0.4}
+              Icon={PseudoIpsumIcon}
+            />
+            <WorkCell
+              title="Youtube Audio Plus"
+              link="#"
+              description="A browser extension for advanced YouTube audio control. It features an equalizer and bass adjustments. Visual effects enhance the listening experience for every user."
+              delay={0.5}
+              Icon={AudioPlusIcon}
+            />
+          </section>
+        </main>
+      </div>
+    </CursorContext.Provider>
   );
 }
