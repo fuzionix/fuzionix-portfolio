@@ -1,12 +1,46 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import Image from "next/image";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 import { ArrowUpRight, Menu } from "lucide-react";
-import Image from 'next/image';
 
 const NAV_LINKS = ["Work", "Tools", "Writing", "About", "Contact"] as const;
 const EASE = [0.22, 1, 0.36, 1] as const;
+
+function CursorFollower() {
+  const mx = useMotionValue(-100);
+  const my = useMotionValue(-100);
+
+  const dotX = useSpring(mx, { stiffness: 700, damping: 45 });
+  const dotY = useSpring(my, { stiffness: 700, damping: 45 });
+  const ringX = useSpring(mx, { stiffness: 90, damping: 12 });
+  const ringY = useSpring(my, { stiffness: 90, damping: 12 });
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      mx.set(e.clientX);
+      my.set(e.clientY);
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [mx, my]);
+
+  return (
+    <div className="pointer-events-none fixed inset-0 z-10000 hidden md:block">
+      {/* Lagging ring */}
+      <motion.div
+        style={{ x: ringX, y: ringY, translateX: "-50%", translateY: "-50%" }}
+        className="absolute w-36 h-36 rounded-full border border-ash/30"
+      />
+      {/* Fast dot */}
+      <motion.div
+        style={{ x: dotX, y: dotY, translateX: "-50%", translateY: "-50%" }}
+        className="absolute w-1.5 h-1.5 rounded-full border border-paper box-content bg-ink/70"
+      />
+    </div>
+  );
+}
 
 function Navigation() {
   const [dark, setDark] = useState(false);
@@ -18,7 +52,6 @@ function Navigation() {
       transition={{ duration: 0.9, ease: EASE }}
       className="fixed inset-x-0 top-0 z-50 h-14 flex items-center justify-between px-8 md:px-12 border-b border-border bg-paper/90 backdrop-blur-sm"
     >
-      {/* ── Brandmark ── */}
       <span className="-mb-1 font-bold text-sm tracking-tight text-ink select-none">
         <Image
           src="/logo/Fuzionix-logo.svg"
@@ -29,7 +62,6 @@ function Navigation() {
         />
       </span>
 
-      {/* ── Right cluster ── */}
       <nav className="flex items-center gap-6 md:gap-8">
         {NAV_LINKS.map((link, i) => (
           <motion.a
@@ -44,7 +76,6 @@ function Navigation() {
           </motion.a>
         ))}
 
-        {/* Theme toggle */}
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -58,7 +89,6 @@ function Navigation() {
           />
         </motion.button>
 
-        {/* Mobile menu icon */}
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -106,7 +136,7 @@ function ManifestoCell() {
       </span>
 
       {/* Display headline */}
-      <h1 className="text-4xl sm:text-5xl md:text-7xl xl:text-8xl font-bold text-ink leading-none tracking-tight">
+      <h1 className="text-5xl sm:text-5xl md:text-7xl xl:text-8xl font-bold text-ink leading-none tracking-tight">
         Craft at the
         <br />
         intersection
@@ -124,19 +154,18 @@ function ManifestoCell() {
   );
 }
 
-function IdentityCell() {
-  const meta = [
-    { label: "Studio", value: "Fuzionix" },
-    { label: "Education", value: "Hong Kong Baptist University" },
-    { label: "Based in", value: "Hong Kong" },
-  ];
+const META_ITEMS = [
+  { label: "Studio", value: "Fuzionix" },
+  { label: "Education", value: "Hong Kong Baptist University" },
+  { label: "Based in", value: "Hong Kong" },
+] as const;
 
+function IdentityCell() {
   return (
     <Cell
       delay={0.28}
       className="col-span-12 md:col-span-5 p-8 md:p-12 gap-8"
     >
-      {/* Header */}
       <div className="flex items-start justify-between">
         <span className="font-sans text-xs tracking-widest uppercase text-ash">
           Identity
@@ -144,7 +173,6 @@ function IdentityCell() {
         <ArrowUpRight size={14} className="text-ash" strokeWidth={1.5} />
       </div>
 
-      {/* Name + role */}
       <div>
         <h2 className="text-4xl md:text-5xl font-bold text-ink leading-tight tracking-tight">
           Taylon Chan
@@ -156,13 +184,27 @@ function IdentityCell() {
         </p>
       </div>
 
-      {/* Metadata table */}
-      <div className="pt-5 border-t border-border space-y-2.5">
-        {meta.map(({ label, value }) => (
-          <div key={label} className="flex items-center justify-between">
-            <span className="font-sans text-xs text-ash">{label}</span>
-            <span className="font-sans text-xs text-ink">{value}</span>
-          </div>
+      <div className="pt-5 border-t border-border">
+        {META_ITEMS.map(({ label, value }, i) => (
+          <motion.div
+            key={label}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.52 + i * 0.11, duration: 0.65, ease: EASE }}
+            className={`group flex items-center gap-4 py-3.5 ${
+              i < META_ITEMS.length - 1 ? "border-b border-border/50" : ""
+            }`}
+          >
+            {/* Label + value stacked */}
+            <div className="flex-1 min-w-0">
+              <p className="font-sans text-xs uppercase tracking-widest text-ash mb-0.5 leading-none">
+                {label}
+              </p>
+              <p className="font-sans text-sm text-ink font-medium truncate group-hover:text-ash transition-colors duration-300">
+                {value}
+              </p>
+            </div>
+          </motion.div>
         ))}
       </div>
     </Cell>
@@ -209,22 +251,15 @@ function LocationCell() {
       delay={0.46}
       className="col-span-6 md:col-span-4 p-8 md:p-12 gap-6"
     >
-      {/* Label */}
       <div className="flex items-center gap-1.5 text-ash">
         <span className="font-sans text-xs tracking-widest uppercase">
           Location
         </span>
       </div>
 
-      {/* Place */}
       <div>
         <p className="font-bold text-sm text-ink">Hong Kong</p>
         <p className="font-sans text-xs text-ash mt-0.5">UTC +08:00</p>
-      </div>
-
-      {/* Live clock */}
-      <div className="flex items-center gap-1.5">
-        <span className="font-sans text-xs text-ash tabular-nums">{time}</span>
       </div>
     </Cell>
   );
@@ -255,12 +290,11 @@ function AvailabilityCell() {
 
 export default function Portfolio() {
   return (
-    <div
-      className="min-h-screen w-full bg-paper text-ink selection:bg-ink selection:text-paper"
-    >
+    <div className="min-h-screen w-full bg-paper text-ink selection:bg-ink selection:text-paper md:[cursor:none]">
+      <CursorFollower />
       <Navigation />
 
-      {/* ── Profile / Manifesto ── */}
+      {/* Profile / Manifesto */}
       <section
         id="home"
         className="min-h-screen pt-14 grid grid-cols-12 border-l border-t border-border"
