@@ -223,7 +223,7 @@ function WorkCell({
         <h3 className="text-3xl md:text-4xl font-bold text-ink mb-2 tracking-tight">
           {title}
         </h3>
-        <p className="font-sans text-sm text-ash leading-relaxed">
+        <p className="sm:pr-16 md:pr-0 xl:pr-16 font-sans text-sm text-ash leading-relaxed">
           {description}
         </p>
       </div>
