@@ -15,6 +15,21 @@
   color: var(--color-ink);
 }
 
+html.dark {
+  --color-paper: #141412;
+  --color-ink: #f0ede8;
+  --color-ash: #686866;
+  --color-border: #2c2c2a;
+}
+
+*,
+*::before,
+*::after {
+  transition-property: background-color, color, border-color, fill, stroke;
+  transition-duration: 0.5s;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 body {
   font-family: var(--font-stack-sans);
   -webkit-font-smoothing: antialiased;

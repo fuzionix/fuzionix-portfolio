@@ -3,18 +3,25 @@
 import React, { useState, useEffect, createContext, useContext } from "react";
 import Image from "next/image";
 import { motion, useMotionValue, useSpring } from "framer-motion";
-import { 
+import {
   ArrowUpRight,
   Menu,
   Code,
   CircleSlash2,
   Pyramid,
-  Origami
+  Origami,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 const CursorContext = createContext({
   isHovering: false,
-  setIsHovering: (value: boolean) => {},
+  setIsHovering: (_value: boolean) => {},
+});
+
+const ThemeContext = createContext({
+  dark: false,
+  setDark: (_value: boolean) => {},
 });
 
 const NAV_LINKS = ["Work", "Tools", "Writing", "About", "Contact"] as const;
@@ -24,6 +31,7 @@ function CursorFollower() {
   const mx = useMotionValue(-100);
   const my = useMotionValue(-100);
   const { isHovering } = useContext(CursorContext);
+  const { dark } = useContext(ThemeContext);
 
   const dotX = useSpring(mx, { stiffness: 700, damping: 45 });
   const dotY = useSpring(my, { stiffness: 700, damping: 45 });
@@ -39,21 +47,31 @@ function CursorFollower() {
     return () => window.removeEventListener("mousemove", onMove);
   }, [mx, my]);
 
+  const idleBorder = dark
+    ? "rgba(240, 237, 232, 0.28)"
+    : "rgba(136, 136, 136, 0.3)";
+  const hoverBg = dark
+    ? "rgba(240, 237, 232, 0.07)"
+    : "rgba(26, 26, 26, 0.06)";
+  const hoverBorder = dark
+    ? "rgba(240, 237, 232, 0.2)"
+    : "rgba(26, 26, 26, 0.15)";
+
   return (
     <div className="pointer-events-none fixed inset-0 z-10000 hidden md:block">
-      {/* Lagging ring */}
+      {/* Lagging Ring */}
       <motion.div
         style={{ x: ringX, y: ringY, translateX: "-50%", translateY: "-50%" }}
         animate={{
           scale: isHovering ? 0.75 : 1,
-          backgroundColor: isHovering ? "rgba(26, 26, 26, 0.06)" : "rgba(0,0,0,0)",
-          borderColor: isHovering ? "rgba(26, 26, 26, 0.15)" : "rgba(136, 136, 136, 0.3)",
+          backgroundColor: isHovering ? hoverBg : "rgba(0,0,0,0)",
+          borderColor: isHovering ? hoverBorder : idleBorder,
         }}
         transition={{ duration: 0.3, ease: "easeOut" }}
         className="absolute w-36 h-36 rounded-full border box-border"
       />
 
-      {/* Fast dot */}
+      {/* Fast Dot */}
       <motion.div
         style={{ x: dotX, y: dotY, translateX: "-50%", translateY: "-50%" }}
         animate={{
@@ -68,7 +86,7 @@ function CursorFollower() {
 }
 
 function Navigation() {
-  const [dark, setDark] = useState(false);
+  const { dark, setDark } = useContext(ThemeContext);
 
   return (
     <motion.header
@@ -84,6 +102,10 @@ function Navigation() {
           width={18}
           height={18}
           priority
+          style={{
+            filter: dark ? "invert(1)" : "none",
+            transition: "filter 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
+          }}
         />
       </span>
 
@@ -101,17 +123,28 @@ function Navigation() {
           </motion.a>
         ))}
 
+        {/* Theme Toggle */}
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.72, duration: 0.5 }}
-          onClick={() => setDark((p) => !p)}
-          aria-label="Toggle theme"
-          className="hidden md:flex relative w-8 h-4 rounded-full border border-border cursor-pointer bg-transparent items-center"
+          onClick={() => setDark(!dark)}
+          aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+          className="flex items-center justify-center w-8 h-8 rounded-sm border border-border cursor-pointer text-ash hover:text-ink hover:border-ink/30 transition-colors duration-300"
         >
-          <span
-            className={`absolute top-0.5 w-3 h-3 rounded-full bg-ash transition-all duration-300 ${dark ? "left-4" : "left-0.5"}`}
-          />
+          <motion.div
+            key={dark ? "sun" : "moon"}
+            initial={{ opacity: 0, rotate: -30, scale: 0.7 }}
+            animate={{ opacity: 1, rotate: 0, scale: 1 }}
+            exit={{ opacity: 0, rotate: 30, scale: 0.7 }}
+            transition={{ duration: 0.3, ease: EASE }}
+          >
+            {dark ? (
+              <Sun size={13} strokeWidth={1.5} />
+            ) : (
+              <Moon size={13} strokeWidth={1.5} />
+            )}
+          </motion.div>
         </motion.button>
 
         <motion.button
@@ -143,7 +176,7 @@ function Cell({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.9, delay, ease: EASE }}
-      className={`border-r border-b border-border flex flex-col justify-between hover:bg-white/30 transition-colors duration-500 ${className}`}
+      className={`border-r border-b border-border flex flex-col justify-between hover:bg-ink/3 transition-colors duration-500 ${className}`}
     >
       {children}
     </motion.div>
@@ -174,10 +207,10 @@ function WorkCell({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.9, delay, ease: EASE }}
-      className="col-span-12 md:col-span-6 p-8 md:p-12 border-r border-b border-border flex flex-col justify-between hover:bg-white/60 transition-colors duration-500 group md:cursor-none min-h-80"
+      className="col-span-12 md:col-span-6 p-8 md:p-12 border-r border-b border-border flex flex-col justify-between hover:bg-ink/4 transition-colors duration-500 group md:cursor-none min-h-80"
     >
       <div className="flex justify-between items-start mb-12">
-        <div className="p-3 border border-border rounded-sm bg-paper group-hover:bg-white transition-colors duration-500">
+        <div className="p-3 border border-border rounded-sm bg-paper group-hover:bg-ink/3 transition-colors duration-500">
           <Icon />
         </div>
         <ArrowUpRight
@@ -209,7 +242,7 @@ function ManifestoCell() {
         Manifesto — 2026
       </span>
 
-      {/* Display headline */}
+      {/* Display Headline */}
       <h1 className="text-5xl sm:text-5xl md:text-7xl xl:text-8xl font-bold text-ink leading-none tracking-tight">
         Craft at the
         <br />
@@ -220,7 +253,7 @@ function ManifestoCell() {
         and design.
       </h1>
 
-      {/* Sub-copy */}
+      {/* Supporting Text */}
       <p className="font-sans text-sm text-ash leading-relaxed max-w-sm">
         The finest digital work emerges where structural thinking and aesthetic precision become indistinguishable. Every pixel earns its place. Every function serves its purpose.
       </p>
@@ -266,7 +299,7 @@ function IdentityCell() {
               i < META_ITEMS.length - 1 ? "border-b border-border/50" : ""
             }`}
           >
-            {/* Label + value stacked */}
+            {/* Label + Value Stacked */}
             <div className="flex-1 min-w-0">
               <p className="font-sans text-xs uppercase tracking-widest text-ash mb-0.5 leading-none">
                 {label}
@@ -324,7 +357,9 @@ function LocationCell() {
 
       <div>
         <p className="font-bold text-sm text-ink">Hong Kong</p>
-        <p className="font-sans text-xs text-ash mt-0.5">UTC +08:00 - {time}</p>
+        <p className="font-sans text-xs text-ash mt-0.5">
+          UTC +08:00 — {time}
+        </p>
       </div>
     </Cell>
   );
@@ -350,99 +385,98 @@ function AvailabilityCell() {
   );
 }
 
-const DevToolIcon = () => (
-  <Code strokeWidth={1} />
-);
-
-const CurzrIcon = () => (
-  <Pyramid strokeWidth={1} />
-);
-
-const PseudoIpsumIcon = () => (
-  <Origami strokeWidth={1} />
-);
-
-const AudioPlusIcon = () => (
-  <CircleSlash2 strokeWidth={1} />
-);
+const DevToolIcon = () => <Code strokeWidth={1} />;
+const CurzrIcon = () => <Pyramid strokeWidth={1} />;
+const PseudoIpsumIcon = () => <Origami strokeWidth={1} />;
+const AudioPlusIcon = () => <CircleSlash2 strokeWidth={1} />;
 
 export default function Portfolio() {
   const [isHovering, setIsHovering] = useState(false);
+  const [dark, setDark] = useState(false);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (dark) {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+  }, [dark]);
 
   return (
-    <CursorContext.Provider value={{ isHovering, setIsHovering }}>
-      <div className="min-h-screen w-full bg-paper text-ink selection:bg-ink selection:text-paper md:cursor-none">
-        <CursorFollower />
-        <Navigation />
+    <ThemeContext.Provider value={{ dark, setDark }}>
+      <CursorContext.Provider value={{ isHovering, setIsHovering }}>
+        <div className="min-h-screen w-full bg-paper text-ink selection:bg-ink selection:text-paper md:cursor-none">
+          <CursorFollower />
+          <Navigation />
 
-        <main className="pt-14">
-          {/* Profile / Manifesto Section */}
-          <section
-            id="home"
-            className="grid grid-cols-12 border-l border-t border-border"
-          >
-            {/* Row 1 */}
-            <ManifestoCell />
-            <IdentityCell />
+          <main className="pt-14">
+            {/* Profile / Manifesto */}
+            <section
+              id="home"
+              className="grid grid-cols-12 border-l border-t border-border"
+            >
+              <ManifestoCell />
+              <IdentityCell />
+              <PracticeCell />
+              <LocationCell />
+              <AvailabilityCell />
+            </section>
 
-            {/* Row 2 */}
-            <PracticeCell />
-            <LocationCell />
-            <AvailabilityCell />
-          </section>
-
-          {/* Selected Works Section */}
-          <section
-            id="work"
-            className="grid grid-cols-12 border-l border-border"
-          >
-            {/* Section Header Cell */}
-            <Cell delay={0.1} className="col-span-12 p-8 md:p-12 flex flex-col md:flex-row md:items-end justify-between gap-4 bg-paper">
-              <div>
-                <span className="font-sans text-xs tracking-widest uppercase text-ash block mb-4">
-                  Index
+            {/* Selected Works */}
+            <section
+              id="work"
+              className="grid grid-cols-12 border-l border-border"
+            >
+              <Cell
+                delay={0.1}
+                className="col-span-12 p-8 md:p-12 flex flex-col md:flex-row md:items-end justify-between gap-4 bg-paper"
+              >
+                <div>
+                  <span className="font-sans text-xs tracking-widest uppercase text-ash block mb-4">
+                    Index
+                  </span>
+                  <h2 className="text-4xl md:text-5xl font-bold text-ink tracking-tight">
+                    Selected Works
+                  </h2>
+                </div>
+                <span className="font-sans text-xs tracking-widest uppercase text-ash">
+                  01 — 04
                 </span>
-                <h2 className="text-4xl md:text-5xl font-bold text-ink tracking-tight">
-                  Selected Works
-                </h2>
-              </div>
-              <span className="font-sans text-xs tracking-widest uppercase text-ash">
-                01 — 04
-              </span>
-            </Cell>
+              </Cell>
 
-            {/* Work Grid */}
-            <WorkCell
-              title="DevTool Plus"
-              link="#"
-              description="A code editor extension that provides common developer tools directly in your editor. The extension runs entirely on your local machine. No network requests are involved."
-              delay={0.2}
-              Icon={DevToolIcon}
-            />
-            <WorkCell
-              title="Curzr"
-              link="#"
-              description="A library of high-quality custom cursors and effects. It showcases creative designs with live demos. Developers can access easy-to-use code examples for every cursor."
-              delay={0.3}
-              Icon={CurzrIcon}
-            />
-            <WorkCell
-              title="Pseudo Ipsum"
-              link="#"
-              description="This tool provides Lorem Ipsum for code. It generates syntactically valid and non-functional syntax. Support is included for various popular programming languages."
-              delay={0.4}
-              Icon={PseudoIpsumIcon}
-            />
-            <WorkCell
-              title="Youtube Audio Plus"
-              link="#"
-              description="A browser extension for advanced YouTube audio control. It features an equalizer and bass adjustments. Visual effects enhance the listening experience for every user."
-              delay={0.5}
-              Icon={AudioPlusIcon}
-            />
-          </section>
-        </main>
-      </div>
-    </CursorContext.Provider>
+              <WorkCell
+                title="DevTool Plus"
+                link="#"
+                description="A code editor extension that provides common developer tools directly in your editor. The extension runs entirely on your local machine. No network requests are involved."
+                delay={0.2}
+                Icon={DevToolIcon}
+              />
+              <WorkCell
+                title="Curzr"
+                link="#"
+                description="A library of high-quality custom cursors and effects. It showcases creative designs with live demos. Developers can access easy-to-use code examples for every cursor."
+                delay={0.3}
+                Icon={CurzrIcon}
+              />
+              <WorkCell
+                title="Pseudo Ipsum"
+                link="#"
+                description="This tool provides Lorem Ipsum for code. It generates syntactically valid and non-functional syntax. Support is included for various popular programming languages."
+                delay={0.4}
+                Icon={PseudoIpsumIcon}
+              />
+              <WorkCell
+                title="Youtube Audio Plus"
+                link="#"
+                description="A browser extension for advanced YouTube audio control. It features an equalizer and bass adjustments. Visual effects enhance the listening experience for every user."
+                delay={0.5}
+                Icon={AudioPlusIcon}
+              />
+            </section>
+          </main>
+        </div>
+      </CursorContext.Provider>
+    </ThemeContext.Provider>
   );
 }
