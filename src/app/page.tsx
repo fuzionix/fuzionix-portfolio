@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, createContext, useContext } from "react";
+import React, { useState, useEffect, createContext, useContext, useRef } from "react";
 import Image from "next/image";
-import { motion, useMotionValue, useSpring } from "framer-motion";
+import { motion, useMotionValue, useSpring, useScroll, useTransform } from "framer-motion";
 import {
   ArrowUpRight,
   Menu,
@@ -158,6 +158,64 @@ function Navigation() {
         </motion.button>
       </nav>
     </motion.header>
+  );
+}
+
+function SmoothScroll({ children }: { children: React.ReactNode }) {
+  const { scrollY } = useScroll();
+  
+  // Physics tuned for a calm, editorial momentum feel
+  const smoothY = useSpring(scrollY, { damping: 15, mass: 0.1, stiffness: 75 });
+  const y = useTransform(smoothY, (value) => -value);
+
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [pageHeight, setPageHeight] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile devices to fallback to native scrolling (better for touch)
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Sync document height with the fixed container height
+  useEffect(() => {
+    if (isMobile) return;
+
+    const updateHeight = () => {
+      if (contentRef.current) {
+        setPageHeight(contentRef.current.scrollHeight);
+      }
+    };
+
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    if (contentRef.current) {
+      observer.observe(contentRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [isMobile]);
+
+  if (isMobile) {
+    return <>{children}</>;
+  }
+
+  return (
+    <>
+      {/* Invisible element to force the body to have the correct scrollable height */}
+      <div style={{ height: pageHeight }} />
+      {/* The fixed container that moves smoothly via Framer Motion */}
+      <motion.div
+        ref={contentRef}
+        style={{ y }}
+        className="fixed top-0 inset-x-0 will-change-transform"
+      >
+        {children}
+      </motion.div>
+    </>
   );
 }
 
@@ -410,71 +468,73 @@ export default function Portfolio() {
           <CursorFollower />
           <Navigation />
 
-          <main className="pt-14">
-            {/* Profile / Manifesto */}
-            <section
-              id="home"
-              className="grid grid-cols-12 border-l border-t border-border"
-            >
-              <ManifestoCell />
-              <IdentityCell />
-              <PracticeCell />
-              <LocationCell />
-              <AvailabilityCell />
-            </section>
-
-            {/* Selected Works */}
-            <section
-              id="work"
-              className="grid grid-cols-12 border-l border-border"
-            >
-              <Cell
-                delay={0.1}
-                className="col-span-12 p-8 md:p-12 flex flex-col md:flex-row md:items-end justify-between gap-4 bg-paper"
+          <SmoothScroll>
+            <main className="pt-14">
+              {/* Profile / Manifesto */}
+              <section
+                id="home"
+                className="grid grid-cols-12 border-l border-t border-border"
               >
-                <div>
-                  <span className="font-sans text-xs tracking-widest uppercase text-ash block mb-4">
-                    Index
-                  </span>
-                  <h2 className="text-4xl md:text-5xl font-bold text-ink tracking-tight">
-                    Selected Works
-                  </h2>
-                </div>
-                <span className="font-sans text-xs tracking-widest uppercase text-ash">
-                  01 — 04
-                </span>
-              </Cell>
+                <ManifestoCell />
+                <IdentityCell />
+                <PracticeCell />
+                <LocationCell />
+                <AvailabilityCell />
+              </section>
 
-              <WorkCell
-                title="DevTool Plus"
-                link="#"
-                description="A code editor extension that provides common developer tools directly in your editor. The extension runs entirely on your local machine. No network requests are involved."
-                delay={0.2}
-                Icon={DevToolIcon}
-              />
-              <WorkCell
-                title="Curzr"
-                link="#"
-                description="A library of high-quality custom cursors and effects. It showcases creative designs with live demos. Developers can access easy-to-use code examples for every cursor."
-                delay={0.3}
-                Icon={CurzrIcon}
-              />
-              <WorkCell
-                title="Pseudo Ipsum"
-                link="#"
-                description="This tool provides Lorem Ipsum for code. It generates syntactically valid and non-functional syntax. Support is included for various popular programming languages."
-                delay={0.4}
-                Icon={PseudoIpsumIcon}
-              />
-              <WorkCell
-                title="Youtube Audio Plus"
-                link="#"
-                description="A browser extension for advanced YouTube audio control. It features an equalizer and bass adjustments. Visual effects enhance the listening experience for every user."
-                delay={0.5}
-                Icon={AudioPlusIcon}
-              />
-            </section>
-          </main>
+              {/* Selected Works */}
+              <section
+                id="work"
+                className="grid grid-cols-12 border-l border-border"
+              >
+                <Cell
+                  delay={0.1}
+                  className="col-span-12 p-8 md:p-12 flex flex-col md:flex-row md:items-end justify-between gap-4 bg-paper"
+                >
+                  <div>
+                    <span className="font-sans text-xs tracking-widest uppercase text-ash block mb-4">
+                      Index
+                    </span>
+                    <h2 className="text-4xl md:text-5xl font-bold text-ink tracking-tight">
+                      Selected Works
+                    </h2>
+                  </div>
+                  <span className="font-sans text-xs tracking-widest uppercase text-ash">
+                    01 — 04
+                  </span>
+                </Cell>
+
+                <WorkCell
+                  title="DevTool Plus"
+                  link="#"
+                  description="A code editor extension that provides common developer tools directly in your editor. The extension runs entirely on your local machine. No network requests are involved."
+                  delay={0.2}
+                  Icon={DevToolIcon}
+                />
+                <WorkCell
+                  title="Curzr"
+                  link="#"
+                  description="A library of high-quality custom cursors and effects. It showcases creative designs with live demos. Developers can access easy-to-use code examples for every cursor."
+                  delay={0.3}
+                  Icon={CurzrIcon}
+                />
+                <WorkCell
+                  title="Pseudo Ipsum"
+                  link="#"
+                  description="This tool provides Lorem Ipsum for code. It generates syntactically valid and non-functional syntax. Support is included for various popular programming languages."
+                  delay={0.4}
+                  Icon={PseudoIpsumIcon}
+                />
+                <WorkCell
+                  title="Youtube Audio Plus"
+                  link="#"
+                  description="A browser extension for advanced YouTube audio control. It features an equalizer and bass adjustments. Visual effects enhance the listening experience for every user."
+                  delay={0.5}
+                  Icon={AudioPlusIcon}
+                />
+              </section>
+            </main>
+          </SmoothScroll>
         </div>
       </CursorContext.Provider>
     </ThemeContext.Provider>
