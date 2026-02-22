@@ -12,6 +12,7 @@ import {
 import { CursorContext, ThemeContext } from "@/app/components/utils/contexts";
 import { CursorFollower, SmoothScroll } from "@/app/components/effects";
 import { Navigation } from "@/app/components/layout/navigation";
+import { ServicesSection } from "@/app/components/sections/services";
 import { EASE } from "@/app/constant";
 
 function Cell({
@@ -276,6 +277,9 @@ export default function Portfolio() {
                 <LocationCell />
                 <AvailabilityCell />
               </section>
+
+              {/* Services */}
+              <ServicesSection />
 
               {/* Selected Works */}
               <section
