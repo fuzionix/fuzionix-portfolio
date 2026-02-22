@@ -573,19 +573,116 @@ function BrandIdentityVisual() {
   );
 }
 
-/* 05 — Registration */
-function BracketsRow() {
+/* 05 — Technical Design Slider */
+const TECH_DESIGN_SLIDES = [
+  {
+    id: "workflow",
+    title: "Design Engineering",
+    desc: "Converting Figma designs into semantic HTML and accessible React components. Building responsive layouts that work flawlessly across devices while maintaining design fidelity to the pixel.",
+    code: "DS-ENG"
+  },
+  {
+    id: "tooling",
+    title: "Bespoke Tooling",
+    desc: "Creating custom Figma plugins, build scripts, and automation tools that streamline design-to-code workflows. Reduces manual handoff errors and speeds up iteration cycles by 40-60%.",
+    code: "TL-SYS"
+  },
+  {
+    id: "api",
+    title: "Component API",
+    desc: "Designing TypeScript-first component APIs with strict prop validation. Preventing misuse at compile-time. Clear documentation with live Storybook examples for every pattern.",
+    code: "CP-API"
+  },
+  {
+    id: "perf",
+    title: "Performance",
+    desc: "Optimizing bundle size, rendering performance, and Core Web Vitals. Implementing lazy loading, code splitting, and animation frame optimization to hit 60fps on all devices.",
+    code: "PF-OPT"
+  }
+];
+
+function TechnicalDesignSlider() {
+  const [activeIdx, setActiveIdx] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveIdx((prev) => (prev + 1) % TECH_DESIGN_SLIDES.length);
+    }, 7000);
+    return () => clearInterval(timer);
+  }, [activeIdx]);
+
+  const activeSlide = TECH_DESIGN_SLIDES[activeIdx];
+
   return (
-    <div className="flex items-center gap-5 flex-wrap">
-      {["DS", "UI", "CT", "BD", "TD"].map((code, i) => (
-        <div key={i} className="relative flex items-center justify-center w-12 h-12">
-          <div className="absolute top-0 left-0 w-3.5 h-3.5 border-t border-l border-ink/30" />
-          <div className="absolute top-0 right-0 w-3.5 h-3.5 border-t border-r border-ink/30" />
-          <div className="absolute bottom-0 left-0 w-3.5 h-3.5 border-b border-l border-ink/30" />
-          <div className="absolute bottom-0 right-0 w-3.5 h-3.5 border-b border-r border-ink/30" />
-          <span className="font-sans text-xs font-medium text-ash/60 tracking-wider">{code}</span>
+    <div className="flex flex-col md:flex-row w-full gap-8 md:gap-0">
+      {/* Left: Header & Controls */}
+      <div className="md:w-72 shrink-0 flex flex-col justify-between pr-8">
+        <div>
+          <span className="font-sans text-xs tracking-widest uppercase text-ash block mb-6">05</span>
+          <h3 className="text-3xl md:text-4xl font-bold text-ink tracking-tight mb-8 md:mb-12">
+            Technical<br />Design
+          </h3>
         </div>
-      ))}
+
+        {/* Slider Controls */}
+        <div className="flex gap-2 w-full max-w-50">
+          {TECH_DESIGN_SLIDES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveIdx(i)}
+              className="relative h-1 flex-1 bg-border overflow-hidden group cursor-pointer"
+              aria-label={`Go to slide ${i + 1}`}
+            >
+              <motion.div
+                key={activeIdx === i ? `active-${i}` : `inactive-${i}`}
+                className="absolute top-0 left-0 h-full bg-ink"
+                initial={{ width: activeIdx === i ? "0%" : "0%" }}
+                animate={{ width: activeIdx === i ? "100%" : "0%" }}
+                transition={{ duration: activeIdx === i ? 7 : 0, ease: "linear" }}
+              />
+              <div className="absolute top-0 left-0 h-full bg-ash/30 w-full opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Right: Dynamic Content */}
+      <div className="flex-1 md:border-l border-border md:pl-14 flex flex-col justify-center relative">
+        <div className="absolute top-0 right-0 hidden md:block">
+          <ArrowUpRight size={18} className="text-ash" strokeWidth={1.5} />
+        </div>
+        
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeIdx}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: EASE }}
+            className="flex flex-col md:flex-row gap-8 md:items-center justify-between w-full h-full pt-2 md:pt-0"
+          >
+            <div className="max-w-md flex flex-col justify-center">
+              <h4 className="text-3xl md:text-4xl font-bold text-ink tracking-tight mb-3">
+                {activeSlide.title}
+              </h4>
+              <p className="font-sans text-sm text-ash leading-relaxed">
+                {activeSlide.desc}
+              </p>
+            </div>
+
+            {/* Abstract Visual / Code Badge */}
+            <div className="hidden md:flex relative items-center justify-center w-28 h-28 shrink-0 bg-ink/2 border border-border/50">
+              <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-ink/40" />
+              <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-ink/40" />
+              <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-ink/40" />
+              <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-ink/40" />
+              <span className="font-sans text-xs font-medium text-ash tracking-wider">
+                {activeSlide.code}
+              </span>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
@@ -704,23 +801,7 @@ export function ServicesSection() {
         delay={0.45}
         className="col-span-12 p-8 md:p-12 flex flex-col md:flex-row md:items-center gap-8 md:gap-0"
       >
-        <div className="md:w-72 shrink-0">
-          <span className="font-sans text-xs tracking-widest uppercase text-ash block mb-6">05</span>
-          <h3 className="text-3xl md:text-4xl font-bold text-ink tracking-tight">
-            Technical<br />Design
-          </h3>
-        </div>
-
-        <div className="flex-1 border-l border-border pl-8 md:pl-14 pr-8 md:pr-14 flex items-center">
-          <BracketsRow />
-        </div>
-
-        <div className="md:w-72 shrink-0 border-l border-border pl-8 md:pl-14 flex flex-col justify-between gap-6">
-          <p className="font-sans text-sm text-ash leading-relaxed">
-            Bridging specification and execution — design engineering workflows, annotation systems, and bespoke tooling that empowers teams to build with intent and velocity.
-          </p>
-          <ArrowUpRight size={18} className="text-ash" strokeWidth={1.5} />
-        </div>
+        <TechnicalDesignSlider />
       </ServiceCell>
 
     </section>
