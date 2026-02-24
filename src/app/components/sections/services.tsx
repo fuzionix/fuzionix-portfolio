@@ -132,7 +132,7 @@ function DesignSystemVisual() {
               }}
               transition={{ duration: 0.25 }}
             />
-            <ArrowUpRight size={13} strokeWidth={1.5} className="relative" />
+            <ArrowUpRight size={18} strokeWidth={1.5} className="relative" />
           </motion.button>
         </div>
       </div>

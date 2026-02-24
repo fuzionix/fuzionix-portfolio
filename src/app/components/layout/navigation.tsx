@@ -9,7 +9,7 @@ import {
 import { ThemeContext } from "@/app/components/utils/contexts";
 import { EASE } from "@/app/constant";
 
-const NAV_LINKS = ["Work", "Tools", "Writing", "About", "Contact"] as const;
+const NAV_LINKS = ["About", "Contact"] as const;
 
 export function Navigation() {
   const { dark, setDark } = useContext(ThemeContext);
@@ -53,7 +53,7 @@ export function Navigation() {
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.72, duration: 0.5 }}
+          transition={{ delay: 0.42, duration: 0.5 }}
           onClick={() => setDark(!dark)}
           aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
           className="flex items-center justify-center w-8 h-8 rounded-sm border border-border cursor-pointer text-ash hover:text-ink hover:border-ink/30 transition-colors duration-300"
@@ -66,9 +66,9 @@ export function Navigation() {
             transition={{ duration: 0.3, ease: EASE }}
           >
             {dark ? (
-              <Sun size={13} strokeWidth={1.5} />
+              <Sun size={18} strokeWidth={1.5} />
             ) : (
-              <Moon size={13} strokeWidth={1.5} />
+              <Moon size={18} strokeWidth={1.5} />
             )}
           </motion.div>
         </motion.button>
@@ -80,7 +80,7 @@ export function Navigation() {
           aria-label="Open menu"
           className="md:hidden text-ash hover:text-ink transition-colors duration-200"
         >
-          <Menu size={16} strokeWidth={1.5} />
+          <Menu size={18} strokeWidth={1.5} />
         </motion.button>
       </nav>
     </motion.header>
