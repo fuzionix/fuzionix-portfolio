@@ -348,7 +348,7 @@ export function ProcessSection() {
       </HCell>
 
       {/* 04 Principles */}
-      <HCell delay={0.25} className="col-span-12 md:col-span-5 p-8 md:p-12">
+      <HCell delay={0.25} className="col-span-12 md:col-span-5 p-8 md:p-12 hover:bg-ink/0! ">
         <div className="flex items-center justify-between mb-8">
           <span className="text-xs tracking-widest uppercase text-ash">
             Principles
