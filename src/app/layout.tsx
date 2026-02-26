@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Space_Grotesk, Stack_Sans_Headline } from "next/font/google";
+import { Stack_Sans_Headline, DM_Mono } from "next/font/google";
 import "./globals.css";
 
 const stackSans = Stack_Sans_Headline({
@@ -8,10 +8,10 @@ const stackSans = Stack_Sans_Headline({
   display: "swap",
 });
 
-const spaceGrotesk = Space_Grotesk({
+const dmMono = DM_Mono({
   subsets: ["latin"],
-  variable: "--font-space-grotesk",
-  display: "swap",
+  variable: "--font-dm-mono",
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${stackSans.variable} ${spaceGrotesk.variable} antialiased`}>
+      <body className={`${stackSans.variable} ${dmMono.variable} antialiased`}>
         {children}
       </body>
     </html>

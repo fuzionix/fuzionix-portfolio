@@ -6,8 +6,8 @@
   --color-ash: #888888;
   --color-border: #e5e5e5;
 
-  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-space-grotesk), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--font-dm-mono), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-dm-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 :root {
@@ -32,6 +32,12 @@ html.dark {
 
 body {
   font-family: var(--font-stack-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+pre {
+  font-family: var(--font-dm-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
