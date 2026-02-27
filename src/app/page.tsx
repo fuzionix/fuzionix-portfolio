@@ -12,6 +12,7 @@ import {
 import { CursorContext, ThemeContext } from "@/app/components/utils/contexts";
 import { CursorFollower, SmoothScroll } from "@/app/components/effects";
 import { Navigation } from "@/app/components/layout/navigation";
+import { FooterSection } from "@/app/components/layout/footer";
 import { ServicesSection } from "@/app/components/sections/services";
 import { ProcessSection } from "@/app/components/sections/process";
 import { EASE } from "@/app/constant";
@@ -335,6 +336,7 @@ export default function Portfolio() {
               </section>
 
               <ProcessSection />
+              <FooterSection />
             </main>
           </SmoothScroll>
         </div>
