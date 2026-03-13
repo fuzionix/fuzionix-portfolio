@@ -1,17 +1,11 @@
 "use client";
 
-import React from "react";
-import { motion } from "framer-motion";
-import { ArrowUpRight, Mail } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowUpRight, Mail, Github } from "lucide-react";
 import { EASE } from "@/app/constant";
 
 const CONTACT_EMAIL = "taylon.chan@fuzionix.io";
-
-const SOCIAL_LINKS = [
-  { label: "GitHub",   handle: "fuzionix",   href: "https://github.com/fuzionix" },
-  { label: "DEV",      handle: "fuzionix",   href: "https://dev.to/fuzionix" },
-  { label: "Threads",  handle: "@fuzion.ix", href: "https://www.threads.com/@fuzion.ix" },
-] as const;
 
 const SITE_LINKS = [
   { label: "Home",    href: "#home" },
@@ -25,6 +19,31 @@ const COLOPHON_ITEMS = [
   { label: "Motion",     value: "Framer Motion" },
   { label: "Hosted",     value: "Vercel" },
 ] as const;
+
+interface ContributionDay {
+  contributionCount: number;
+  date: string;
+  weekday: number;
+}
+
+interface ContributionWeek {
+  contributionDays: ContributionDay[];
+}
+
+interface GitHubData {
+  login: string;
+  name: string;
+  bio: string;
+  followers: { totalCount: number };
+  repositories: { totalCount: number };
+  contributionsCollection: {
+    contributionCalendar: {
+      totalContributions: number;
+      weeks: ContributionWeek[];
+    };
+  };
+  error?: string;
+}
 
 function FooterCell({
   children,
@@ -41,14 +60,240 @@ function FooterCell({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.9, delay, ease: EASE }}
-      className={`border-r border-b border-border flex flex-col hover:bg-ink/3 ${className}`}
+      className={`border-r border-b border-border flex flex-col hover:bg-ink/3 transition-colors duration-500 ${className}`}
     >
       {children}
     </motion.div>
   );
 }
 
-/* Email Cell */
+function ContributionGrid({ weeks }: { weeks: ContributionWeek[] }) {
+  const slicedWeeks = weeks.slice(-32);
+
+  const allCounts = slicedWeeks
+    .flatMap((w) => w.contributionDays.map((d) => d.contributionCount))
+    .filter((c) => c > 0);
+  const peak = allCounts.length > 0 ? Math.max(...allCounts) : 1;
+
+  function getOpacityClass(count: number): string {
+    if (count === 0) return "bg-ink/[0.055]";
+    const ratio = count / peak;
+    if (ratio < 0.2)  return "bg-ink/[0.22]";
+    if (ratio < 0.45) return "bg-ink/[0.42]";
+    if (ratio < 0.7)  return "bg-ink/[0.65]";
+    return "bg-ink/[0.88]";
+  }
+
+  const MONTH_LABELS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  // Build month label positions from the first day of each week
+  const monthMarkers: { label: string; colIndex: number }[] = [];
+  slicedWeeks.forEach((week, i) => {
+    if (week.contributionDays.length === 0) return;
+    const firstDay = new Date(week.contributionDays[0].date);
+    if (firstDay.getDate() <= 7) {
+      const label = MONTH_LABELS[firstDay.getMonth()];
+      // Avoid duplicate adjacent labels
+      if (monthMarkers.length === 0 || monthMarkers[monthMarkers.length - 1].label !== label) {
+        monthMarkers.push({ label, colIndex: i });
+      }
+    }
+  });
+
+  return (
+    <div className="flex flex-col gap-2 w-full overflow-x-auto">
+      {/* Grid */}
+      <div
+        className="grid gap-px"
+        style={{
+          gridTemplateColumns: `repeat(${slicedWeeks.length}, minmax(0, 1fr))`,
+          gridTemplateRows:    "repeat(7, minmax(0, 1fr))",
+          gridAutoFlow:        "column",
+        }}
+      >
+        {slicedWeeks.map((week, wi) =>
+          Array.from({ length: 7 }, (_, dayIndex) => {
+            const day = week.contributionDays.find((d) => d.weekday === dayIndex);
+            return (
+              <motion.div
+                key={`${wi}-${dayIndex}`}
+                title={day ? `${day.date}: ${day.contributionCount} contributions` : ""}
+                initial={{ opacity: 0, scale: 0.6 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{
+                  duration: 0.3,
+                  delay: (wi * 7 + dayIndex) * 0.0048,
+                  ease: EASE,
+                }}
+                className={`aspect-square w-full transition-all duration-150 cursor-default ${day ? getOpacityClass(day.contributionCount) : "bg-ink/5.5"}`}
+              />
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ContributionSkeleton() {
+  return (
+    <div className="flex flex-col gap-2 w-full">
+      <div className="h-3 w-full grid gap-px" style={{ gridTemplateColumns: "repeat(32, 1fr)" }}>
+        {Array.from({ length: 32 }).map((_, i) => (
+          <div key={i} className="h-3 bg-ink/6 animate-pulse" style={{ animationDelay: `${i * 30}ms` }} />
+        ))}
+      </div>
+      {Array.from({ length: 7 }).map((_, row) => (
+        <div key={row} className="w-full grid gap-px" style={{ gridTemplateColumns: "repeat(32, 1fr)" }}>
+          {Array.from({ length: 32 }).map((_, col) => (
+            <div
+              key={col}
+              className="aspect-square bg-ink/6 animate-pulse"
+              style={{ animationDelay: `${(row * 32 + col) * 8}ms` }}
+            />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function GitHubCell() {
+  const [data, setData]       = useState<GitHubData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/github")
+      .then((r) => r.json())
+      .then((d: GitHubData) => {
+        if (d.error) throw new Error(d.error);
+        setData(d);
+      })
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const calendar = data?.contributionsCollection.contributionCalendar;
+
+  return (
+    <FooterCell
+      delay={0.2}
+      className="col-span-12 md:col-span-5 p-8 md:p-12 gap-8"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <span className="font-sans text-xs tracking-widest uppercase text-ash">
+          GitHub
+        </span>
+      </div>
+
+      {/* Profile Row */}
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div
+            key="loading-profile"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex items-center gap-3"
+          >
+            <div className="w-9 h-9 bg-ink/[0.07] animate-pulse shrink-0" />
+            <div className="flex flex-col gap-1.5">
+              <div className="h-3 w-24 bg-ink/[0.07] animate-pulse" />
+              <div className="h-2.5 w-36 bg-ink/5 animate-pulse" />
+            </div>
+          </motion.div>
+        ) : error ? (
+          <motion.div
+            key="error-profile"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center gap-2 text-ash/50"
+          >
+            <Github size={14} strokeWidth={1.5} />
+            <span className="font-sans text-xs">Failed to load profile</span>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="data-profile"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: EASE }}
+            className="flex items-start gap-3"
+          >
+            <div className="flex flex-col gap-1 min-w-0">
+              <span className="font-bold text-4xl sm:text-5xl text-ink tracking-tight leading-tight">
+                Fuzionix
+              </span>
+              <span className="mt-2 font-sans text-sm text-ash/60 leading-snug">
+                {data?.bio ?? ""}
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Contribution Grid */}
+      <div className="flex flex-col gap-2">
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div
+              key="skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <ContributionSkeleton />
+            </motion.div>
+          ) : error ? (
+            <motion.div
+              key="grid-error"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="h-24 border border-border/50 flex items-center justify-center"
+            >
+              <span className="font-sans text-xs text-ash/40">
+                Could not load contribution data
+              </span>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="grid-data"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, ease: EASE }}
+            >
+              <ContributionGrid weeks={calendar?.weeks ?? []} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* GitHub Link */}
+      <div className="flex">
+        <a
+          href="https://github.com/Fuzionix"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex items-center gap-2.5 font-sans text-sm font-medium text-ink hover:text-ash transition-colors duration-300"
+        >
+          <Github size={14} strokeWidth={1.5} className="text-ash shrink-0" />
+          <span className="border-b border-border group-hover:border-ink transition-colors duration-300">
+            github.com/Fuzionix
+          </span>
+          <ArrowUpRight
+            size={13}
+            strokeWidth={1.5}
+            className="text-ash opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all duration-300"
+          />
+        </a>
+      </div>
+    </FooterCell>
+  );
+}
+
 function EmailCell() {
   return (
     <FooterCell
@@ -91,59 +336,6 @@ function EmailCell() {
             className="text-ash opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all duration-300"
           />
         </a>
-      </div>
-    </FooterCell>
-  );
-}
-
-/* Social Links Cell */
-function SocialCell() {
-  return (
-    <FooterCell
-      delay={0.2}
-      className="col-span-12 md:col-span-5 p-8 md:p-12 justify-between gap-10"
-    >
-      <div className="flex items-center justify-between">
-        <span className="font-sans text-xs tracking-widest uppercase text-ash">
-          Elsewhere
-        </span>
-        <ArrowUpRight size={18} className="text-ash" strokeWidth={1.5} />
-      </div>
-
-      <ul className="flex flex-col divide-y divide-border">
-        {SOCIAL_LINKS.map(({ label, handle, href }, i) => (
-          <motion.li
-            key={label}
-            initial={{ opacity: 0, x: -8 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.25 + i * 0.1, duration: 0.65, ease: EASE }}
-          >
-            <a
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center justify-between py-4 transition-all duration-300"
-            >
-              <div className="flex flex-col gap-0.5">
-                <span className="font-sans text-xs tracking-widest uppercase text-ash/50">
-                  {label}
-                </span>
-                <span className="text-2xl font-bold text-ink tracking-tight leading-tight group-hover:text-ash transition-colors duration-300">
-                  {handle}
-                </span>
-              </div>
-            </a>
-          </motion.li>
-        ))}
-      </ul>
-
-      {/* Availability Pulse */}
-      <div className="flex items-center gap-2 pt-2">
-        <span className="w-1.5 h-1.5 rounded-full bg-green-700 animate-pulse shrink-0" />
-        <span className="font-sans text-xs text-ash">
-          Available for new projects
-        </span>
       </div>
     </FooterCell>
   );
@@ -217,7 +409,7 @@ function ColophonCell() {
   );
 }
 
-/* Copyright Bar Cell */
+/* Copyright Cell */
 function CopyrightCell() {
   const year = new Date().getFullYear();
 
@@ -248,16 +440,11 @@ function CopyrightCell() {
 export function FooterSection() {
   return (
     <footer id="contact" className="grid grid-cols-12 border-l border-border">
-
-      {/* Row 1 — Email hero + Socials */}
       <EmailCell />
-      <SocialCell />
-
-      {/* Row 2 — Site links + Colophon + Copyright */}
+      <GitHubCell />
       <SiteLinksCell />
       <ColophonCell />
       <CopyrightCell />
-
     </footer>
   );
 }

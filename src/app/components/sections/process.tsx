@@ -56,22 +56,22 @@ const STEPS = [
 const PRINCIPLES = [
   {
     n: "I",
-    title: "Systems, not solutions.",
+    title: "Systems Over Patches",
     body: "One-off fixes compound into debt. Reusable foundations multiply into leverage.",
   },
   {
     n: "II",
-    title: "Precision by default.",
+    title: "Rationale in Every Decision",
     body: "Nothing arbitrary. Every sizing, spacing, and color decision carries a rationale.",
   },
   {
     n: "III",
-    title: "Code is the final design tool.",
+    title: "In-Medium Thinking",
     body: "The browser is the canvas. Working in-medium eliminates the translation gap entirely.",
   },
   {
     n: "IV",
-    title: "Reduce until honest.",
+    title: "Intention Over Ornament",
     body: "Restraint as a design act. Whitespace is not emptiness — it is pure intention.",
   },
 ];
@@ -364,9 +364,9 @@ export function ProcessSection() {
         className="col-span-12 p-8 md:p-14 flex flex-col md:flex-row md:items-center justify-between gap-8"
       >
         <h3 className="text-3xl md:text-5xl font-bold text-ink tracking-tight leading-tight">
-          Every line has intent.
+          High fidelity logic.
           <br />
-          <span className="text-ash">Every component has purpose.</span>
+          <span className="text-ash">Human centric design.</span>
         </h3>
         <a
           href="#work"
