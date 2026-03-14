@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight, Mail, Github } from "lucide-react";
 import { EASE } from "@/app/constant";
 
-const CONTACT_EMAIL = "taylon.chan@fuzionix.io";
+const CONTACT_EMAIL = "taylon.chan@fuzionix.dev";
 
 const SITE_LINKS = [
   { label: "Home",    href: "#home" },
