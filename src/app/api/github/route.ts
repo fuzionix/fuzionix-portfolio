@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-const GITHUB_USERNAME = process.env.GITHUB_USERNAME ?? "fuzionix";
-const GITHUB_TOKEN    = process.env.GITHUB_TOKEN;
+const GH_USERNAME = process.env.GH_USERNAME ?? "fuzionix";
+const GH_ACCESS_TOKEN    = process.env.GH_ACCESS_TOKEN;
 
 const QUERY = `
   query($login: String!) {
@@ -28,9 +28,9 @@ const QUERY = `
 `;
 
 export async function GET() {
-  if (!GITHUB_TOKEN) {
+  if (!GH_ACCESS_TOKEN) {
     return NextResponse.json(
-      { error: "GITHUB_TOKEN is not configured in environment variables." },
+      { error: "GH_ACCESS_TOKEN is not configured in environment variables." },
       { status: 500 }
     );
   }
@@ -39,13 +39,13 @@ export async function GET() {
     const res = await fetch("https://api.github.com/graphql", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        Authorization: `Bearer ${GH_ACCESS_TOKEN}`,
         "Content-Type": "application/json",
         "User-Agent":   "fuzionix-portfolio",
       },
       body: JSON.stringify({
         query: QUERY,
-        variables: { login: GITHUB_USERNAME },
+        variables: { login: GH_USERNAME },
       }),
       next: { revalidate: 3600 },
     });
